@@ -1,0 +1,123 @@
+# Task ID: 2
+# Title: Reasoning 노드 구현
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: 현재 상황을 분석하고 다음 행동을 계획하는 Reasoning 노드를 구현합니다.
+# Details:
+1. 상황 분석 프롬프트 설계
+2. 다음 행동 계획 로직 구현
+3. 도구 선택 메커니즘 구현
+4. LangGraph 노드로 통합
+
+```python
+from langgraph.graph import StateGraph
+from typing import TypedDict, List, Dict, Any
+
+# 상태 정의
+class AgentState(TypedDict):
+    context: str
+    input: str
+    tools: List[Dict[str, Any]]
+    plan: str
+    selected_tool: str
+    tool_input: Dict[str, Any]
+    tool_output: str
+    reflection: str
+    history: List[Dict[str, Any]]
+
+# Reasoning 노드 구현
+def reasoning(state: AgentState) -> AgentState:
+    """현재 상황을 분석하고 다음 행동을 계획하는 노드"""
+    # 프롬프트 구성
+    prompt = f"""
+    현재 상황: {state['context']}
+    사용자 입력: {state['input']}
+    사용 가능한 도구: {state['tools']}
+    작업 이력: {state['history']}
+    
+    1. 현재 상황을 분석하세요.
+    2. 다음에 취해야 할 행동을 계획하세요.
+    3. 사용할 도구를 선택하세요.
+    """
+    
+    # LLM 호출
+    response = llm.invoke(prompt)
+    
+    # 응답 파싱
+    plan = parse_plan(response)
+    selected_tool = parse_selected_tool(response)
+    tool_input = parse_tool_input(response)
+    
+    # 상태 업데이트
+    state['plan'] = plan
+    state['selected_tool'] = selected_tool
+    state['tool_input'] = tool_input
+    
+    return state
+```
+
+# Test Strategy:
+1. 다양한 입력 상황에 대한 상황 분석 정확도 테스트
+2. 계획 수립 로직의 일관성 검증
+3. 도구 선택 메커니즘의 적절성 평가
+4. 복잡한 상황에서의 추론 능력 테스트
+5. 프롬프트 변형에 따른 성능 비교
+
+# Subtasks:
+## 1. 상황 분석 프롬프트 설계 및 최적화 [pending]
+### Dependencies: None
+### Description: LLM이 현재 상황을 효과적으로 분석할 수 있는 프롬프트를 설계하고 최적화합니다.
+### Details:
+1. 상황 분석에 필요한 핵심 요소(컨텍스트, 사용자 입력, 도구 정보, 작업 이력) 식별
+2. 프롬프트 템플릿 초안 작성
+3. 다양한 상황에 대응할 수 있는 프롬프트 구조 설계
+4. 프롬프트 길이와 복잡성 최적화
+5. 명확한 지시사항과 예시 추가
+6. 프롬프트 변형에 따른 성능 비교 실험
+
+## 2. 다음 행동 계획 로직 구현 [pending]
+### Dependencies: 2.1
+### Description: 현재 상황 분석을 바탕으로 다음 행동을 계획하는 로직을 구현합니다.
+### Details:
+1. 계획 생성을 위한 프롬프트 구조 설계
+2. 단계별 계획 수립 메커니즘 구현
+3. 계획의 구체성과 실행 가능성 검증 로직 추가
+4. 이전 계획과의 일관성 유지 메커니즘 구현
+5. 계획 생성 실패 시 대체 전략 구현
+6. 계획 품질 향상을 위한 피드백 루프 설계
+
+## 3. 도구 선택 메커니즘 구현 [pending]
+### Dependencies: 2.2
+### Description: 계획에 따라 적절한 도구를 선택하고 입력을 준비하는 메커니즘을 구현합니다.
+### Details:
+1. 도구 선택 기준 정의(목적 적합성, 이전 사용 결과 등)
+2. 도구 메타데이터 분석 로직 구현
+3. 도구 선택을 위한 프롬프트 설계
+4. 선택된 도구에 맞는 입력 형식 변환 로직 구현
+5. 도구 선택 실패 시 대체 전략 구현
+6. 도구 사용 이력 기반 선택 최적화 메커니즘 추가
+
+## 4. 응답 파싱 및 상태 업데이트 로직 구현 [pending]
+### Dependencies: 2.1, 2.2, 2.3
+### Description: LLM 응답을 파싱하고 에이전트 상태를 업데이트하는 로직을 구현합니다.
+### Details:
+1. LLM 응답에서 계획, 선택된 도구, 도구 입력 추출 함수 구현
+2. 구조화된 응답 형식 정의 및 파싱 로직 구현
+3. 파싱 오류 처리 및 복구 메커니즘 추가
+4. 상태 객체 업데이트 로직 구현
+5. 이력 관리 및 상태 변화 추적 메커니즘 구현
+6. 디버깅을 위한 중간 상태 로깅 기능 추가
+
+## 5. LangGraph 노드 통합 및 테스트 [pending]
+### Dependencies: 2.4
+### Description: 구현된 로직을 LangGraph 노드로 통합하고 전체 기능을 테스트합니다.
+### Details:
+1. reasoning 함수를 LangGraph 노드로 구성
+2. 노드 입출력 인터페이스 정의 및 구현
+3. 다른 노드(Acting, Reflection)와의 연동 테스트
+4. 전체 워크플로우 내에서의 동작 검증
+5. 에러 처리 및 예외 상황 대응 로직 추가
+6. 성능 최적화 및 병목 현상 해결
+7. 통합 테스트 자동화 스크립트 작성
+

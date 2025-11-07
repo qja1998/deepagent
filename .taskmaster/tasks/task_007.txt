@@ -1,0 +1,133 @@
+# Task ID: 7
+# Title: LangGraph 기반 워크플로우 구현
+# Status: pending
+# Dependencies: 2, 3, 4, 5, 6
+# Priority: high
+# Description: LangGraph를 사용하여 전체 에이전트 워크플로우를 구현합니다.
+# Details:
+1. 상태 정의 및 초기화
+2. 노드 연결 및 그래프 구성
+3. 상태 전이 로직 구현
+4. 에러 핸들링 및 복구 메커니즘 추가
+
+```python
+from langgraph.graph import StateGraph
+
+# 상태 그래프 생성
+workflow = StateGraph(AgentState)
+
+# 노드 추가
+workflow.add_node("reasoning", reasoning)
+workflow.add_node("acting", acting)
+workflow.add_node("reflection", reflection)
+workflow.add_node("router", route_selector)
+
+# 엣지 추가
+workflow.add_edge("router", "reasoning")
+workflow.add_edge("reasoning", "acting")
+workflow.add_edge("acting", "reflection")
+
+# 조건부 엣지 추가
+workflow.add_conditional_edges(
+    "reflection",
+    lambda state: state["next"],
+    {
+        "reasoning": "reasoning",
+        "end": END
+    }
+)
+
+# 시작 노드 설정
+workflow.set_entry_point("router")
+
+# 그래프 컴파일
+executable_graph = workflow.compile()
+
+# 실행 함수
+def run_agent(input_text, context=None):
+    """에이전트 실행"""
+    # 초기 상태 설정
+    initial_state = {
+        "input": input_text,
+        "context": context or "",
+        "tools": list(available_tools.values()),
+        "plan": "",
+        "selected_tool": "",
+        "tool_input": {},
+        "tool_output": "",
+        "reflection": "",
+        "history": [],
+        "next": ""
+    }
+    
+    # 그래프 실행
+    result = executable_graph.invoke(initial_state)
+    
+    # 결과 반환
+    return {
+        "final_state": result,
+        "history": result["history"],
+        "output": result["tool_output"] if result["tool_output"] else result["reflection"]
+    }
+```
+
+# Test Strategy:
+1. 전체 워크플로우 실행 테스트
+2. 상태 전이 정확성 검증
+3. 에러 상황에서의 복구 메커니즘 테스트
+4. 다양한 입력 시나리오에 대한 통합 테스트
+5. 성능 및 안정성 테스트
+
+# Subtasks:
+## 1. 상태 모델 정의 및 초기화 로직 구현 [pending]
+### Dependencies: None
+### Description: AgentState 클래스를 정의하고 워크플로우의 초기 상태를 설정하는 로직을 구현합니다.
+### Details:
+1. TypedDict를 사용하여 AgentState 클래스 정의 (input, context, tools, plan, selected_tool, tool_input, tool_output, reflection, history, next 필드 포함)
+2. 초기 상태 설정 함수 구현 (run_agent 함수의 initial_state 부분)
+3. 상태 유효성 검증 로직 추가
+4. 상태 초기화 시 기본값 설정 메커니즘 구현
+5. 상태 직렬화/역직렬화 기능 구현
+
+## 2. 노드 연결 및 그래프 구성 로직 개발 [pending]
+### Dependencies: 7.1
+### Description: LangGraph를 사용하여 reasoning, acting, reflection, router 노드를 연결하고 그래프를 구성하는 로직을 개발합니다.
+### Details:
+1. 각 노드 함수(reasoning, acting, reflection, route_selector)의 인터페이스 정의
+2. StateGraph 객체 생성 및 노드 추가 로직 구현
+3. 기본 엣지 연결 로직 구현 (router→reasoning→acting→reflection)
+4. 그래프 진입점 설정 및 컴파일 로직 구현
+5. 노드 간 데이터 전달 메커니즘 최적화
+
+## 3. 조건부 상태 전이 및 분기 로직 구현 [pending]
+### Dependencies: 7.2
+### Description: 워크플로우 내에서 조건에 따라 다음 노드로 전이하는 분기 로직을 구현합니다.
+### Details:
+1. 조건부 엣지 추가 로직 구현 (reflection→reasoning 또는 reflection→end)
+2. 상태 전이 조건 함수 구현 (lambda state: state["next"])
+3. 종료 조건 정의 및 구현
+4. 분기 결정을 위한 reflection 노드 출력 형식 표준화
+5. 복잡한 분기 시나리오 처리를 위한 확장 메커니즘 구현
+
+## 4. 에러 핸들링 및 복구 메커니즘 개발 [pending]
+### Dependencies: 7.3
+### Description: 워크플로우 실행 중 발생할 수 있는 다양한 에러 상황을 처리하고 복구하는 메커니즘을 개발합니다.
+### Details:
+1. 노드 실행 중 예외 처리 로직 구현
+2. 도구 호출 실패 시 대체 경로 설정
+3. 상태 불일치 감지 및 복구 메커니즘 구현
+4. 타임아웃 및 재시도 로직 추가
+5. 에러 로깅 및 디버깅 정보 수집 기능 구현
+6. 그래프 실행 중단 및 안전한 종료 메커니즘 개발
+
+## 5. 전체 워크플로우 실행 및 결과 처리 로직 구현 [pending]
+### Dependencies: 7.4
+### Description: 구성된 그래프를 실행하고 결과를 처리하는 로직을 구현합니다.
+### Details:
+1. run_agent 함수 구현 완료 (그래프 실행 및 결과 반환)
+2. 결과 포맷팅 및 후처리 로직 구현
+3. 실행 이력 관리 및 추적 기능 추가
+4. 비동기 실행 지원 (async/await 패턴 적용)
+5. 중간 결과 모니터링 및 디버깅 인터페이스 구현
+6. 성능 최적화 및 리소스 관리 로직 추가
+

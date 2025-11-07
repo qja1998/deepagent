@@ -1,0 +1,14 @@
+langchain>=0.1.0
+langgraph>=0.0.20
+langchain-openai>=0.1.0
+langchain-anthropic>=0.1.0
+langchain-mcp-adapters>=0.1.0
+chromadb>=0.4.0
+faiss-cpu>=1.7.0
+tree-sitter>=0.20.0
+pylint>=3.0.0
+mypy>=1.0.0
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+python-dotenv>=1.0.0
+

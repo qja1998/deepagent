@@ -1,0 +1,175 @@
+# Task ID: 8
+# Title: 진행 상황 추적 및 모니터링 시스템 구현
+# Status: pending
+# Dependencies: 7
+# Priority: medium
+# Description: 에이전트의 진행 상황을 추적하고 모니터링하는 시스템을 구현합니다.
+# Details:
+1. 진행 상황 추적 메커니즘 설계
+2. 로깅 시스템 구현
+3. 시각화 인터페이스 구현
+4. 디버깅 도구 추가
+
+```python
+import logging
+from datetime import datetime
+from typing import Dict, List, Any
+
+class AgentMonitor:
+    def __init__(self):
+        self.logger = self._setup_logger()
+        self.execution_history = []
+        self.performance_metrics = {
+            'total_executions': 0,
+            'successful_executions': 0,
+            'failed_executions': 0,
+            'average_execution_time': 0
+        }
+    
+    def _setup_logger(self):
+        """로거 설정"""
+        logger = logging.getLogger("agent_monitor")
+        logger.setLevel(logging.INFO)
+        
+        # 파일 핸들러
+        file_handler = logging.FileHandler(f"agent_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+        file_handler.setLevel(logging.INFO)
+        
+        # 콘솔 핸들러
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        
+        # 포맷 설정
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+        
+        # 핸들러 추가
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+        
+        return logger
+    
+    def log_state_transition(self, from_state: str, to_state: str, state_data: Dict[str, Any]):
+        """상태 전이 로깅"""
+        self.logger.info(f"State transition: {from_state} -> {to_state}")
+        self.execution_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'from_state': from_state,
+            'to_state': to_state,
+            'state_data': state_data
+        })
+    
+    def log_tool_execution(self, tool_name: str, inputs: Dict[str, Any], outputs: Any, execution_time: float):
+        """도구 실행 로깅"""
+        self.logger.info(f"Tool execution: {tool_name} (took {execution_time:.2f}s)")
+        self.execution_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'event_type': 'tool_execution',
+            'tool_name': tool_name,
+            'inputs': inputs,
+            'outputs': outputs,
+            'execution_time': execution_time
+        })
+    
+    def log_error(self, error_type: str, error_message: str, context: Dict[str, Any]):
+        """에러 로깅"""
+        self.logger.error(f"Error: {error_type} - {error_message}")
+        self.execution_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'event_type': 'error',
+            'error_type': error_type,
+            'error_message': error_message,
+            'context': context
+        })
+        self.performance_metrics['failed_executions'] += 1
+    
+    def log_completion(self, success: bool, execution_time: float, result: Any):
+        """실행 완료 로깅"""
+        status = "Success" if success else "Failure"
+        self.logger.info(f"Execution completed: {status} (took {execution_time:.2f}s)")
+        self.execution_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'event_type': 'completion',
+            'success': success,
+            'execution_time': execution_time,
+            'result': result
+        })
+        
+        # 성능 지표 업데이트
+        self.performance_metrics['total_executions'] += 1
+        if success:
+            self.performance_metrics['successful_executions'] += 1
+        else:
+            self.performance_metrics['failed_executions'] += 1
+        
+        # 평균 실행 시간 업데이트
+        self.performance_metrics['average_execution_time'] = (
+            (self.performance_metrics['average_execution_time'] * (self.performance_metrics['total_executions'] - 1) + execution_time) / 
+            self.performance_metrics['total_executions']
+        )
+    
+    def get_execution_history(self) -> List[Dict[str, Any]]:
+        """실행 이력 반환"""
+        return self.execution_history
+    
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        """성능 지표 반환"""
+        return self.performance_metrics
+```
+
+# Test Strategy:
+1. 로깅 시스템 정확성 테스트
+2. 진행 상황 추적 메커니즘 검증
+3. 성능 지표 계산 정확성 테스트
+4. 다양한 에러 상황에서의 로깅 테스트
+5. 장기 실행 시 안정성 테스트
+
+# Subtasks:
+## 1. 로깅 시스템 설계 및 구현 [pending]
+### Dependencies: None
+### Description: 에이전트의 다양한 이벤트와 상태 변화를 체계적으로 기록하는 로깅 시스템을 설계하고 구현합니다.
+### Details:
+1. 로깅 레벨 체계 정의(INFO, DEBUG, WARNING, ERROR 등)
+2. 파일 및 콘솔 로깅 핸들러 구현
+3. 로그 포맷 및 구조 설계(타임스탬프, 이벤트 유형, 메시지 등)
+4. 로그 순환 및 보관 정책 구현
+5. 로그 필터링 및 검색 기능 추가
+6. 로그 압축 및 백업 메커니즘 구현
+
+## 2. 실행 이력 추적 및 저장 메커니즘 개발 [pending]
+### Dependencies: 8.1
+### Description: 에이전트의 모든 활동과 상태 전이를 추적하고 저장하는 메커니즘을 개발합니다.
+### Details:
+1. 실행 이력 데이터 구조 설계(타임스탬프, 이벤트 유형, 상태 데이터 등)
+2. 상태 전이 추적 로직 구현(from_state, to_state)
+3. 도구 실행 추적 기능 구현(입력, 출력, 실행 시간)
+4. 이력 데이터 직렬화 및 역직렬화 구현
+5. 이력 데이터 영구 저장 메커니즘 구현(JSON, DB 등)
+6. 이력 데이터 쿼리 및 필터링 인터페이스 개발
+
+## 3. 성능 지표 계산 및 분석 로직 구현 [pending]
+### Dependencies: 8.2
+### Description: 에이전트의 성능을 측정하고 분석하기 위한 다양한 지표를 계산하는 로직을 구현합니다.
+### Details:
+1. 핵심 성능 지표 정의(성공률, 실패율, 평균 실행 시간 등)
+2. 실시간 지표 계산 로직 구현
+3. 시간 기반 성능 추세 분석 기능 개발
+4. 성능 이상치 감지 알고리즘 구현
+5. 지표 집계 및 요약 기능 구현
+6. 성능 보고서 생성 기능 개발
+7. 성능 지표 시각화 데이터 준비 로직 구현
+
+## 4. 디버깅 도구 및 시각화 인터페이스 개발 [pending]
+### Dependencies: 8.1, 8.2, 8.3
+### Description: 에이전트의 동작을 분석하고 디버깅하기 위한 도구와 시각화 인터페이스를 개발합니다.
+### Details:
+1. 웹 기반 대시보드 인터페이스 설계 및 구현
+2. 실시간 모니터링 뷰 개발(현재 상태, 활성 작업 등)
+3. 실행 이력 시각화 컴포넌트 구현(타임라인, 그래프 등)
+4. 성능 지표 차트 및 그래프 구현
+5. 로그 뷰어 및 필터링 인터페이스 개발
+6. 디버깅 제어 도구 구현(일시 중지, 단계별 실행 등)
+7. 에러 분석 및 진단 도구 개발
+8. 설정 및 구성 인터페이스 구현
+
